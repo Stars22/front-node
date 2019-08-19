@@ -45,11 +45,17 @@ exports.createPost = (req, res, next) => {
     error.statusCode = 422;
     return next(error);
   }
-  // Create post in db
+  if(!req.file) {
+    const error = new Error('No image provided');
+    error.statusCode = 422;
+    throw error;
+  }
+  const path = req.file.path.includes('\\') ? req.file.path.replace(/\\/g,"/") : req.file.path;
+  console.log(path);
   const post = new Post({
     title,
     content,
-    imageUrl: '/someimage.jpg',
+    imageUrl: path,
     creator: { name: 'Ace'}
   });
   post.save()
