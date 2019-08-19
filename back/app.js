@@ -1,5 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+require('dotenv').config();
+
 
 const feedRoutes = require('./routes/feed');
 
@@ -17,4 +20,6 @@ app.use((req, res, next) => {
 
 app.use('/feed', feedRoutes);
 
-app.listen(8080);
+mongoose.connect(process.env.API_URL, { useNewUrlParser: true }, err => {
+  app.listen(8080);
+});
