@@ -52,8 +52,9 @@ app.use('/auth', authRoutes);
 app.use((err, req, res, next) => {
   console.log(err);
   const status = err.statusCode || 500;
+  const data = err.data;
   const message = err.message;
-  res.status(status).json(message);
+  res.status(status).json({ message, data });
 });
 
 mongoose.connect(process.env.API_URL, { useNewUrlParser: true }, err => {
