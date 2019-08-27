@@ -16,7 +16,6 @@ exports.getPosts = (req, res, next) => {
         .limit(postsLimit);
     })
     .then(posts => {
-      console.log(posts[0]);
       res.status(200).json({
         message: 'Fetched posts successfully',
         posts,
@@ -65,7 +64,6 @@ exports.createPost = (req, res, next) => {
     throw error;
   }
   const path = req.file.path.includes('\\') ? req.file.path.replace(/\\/g,"/") : req.file.path;
-  console.log(path);
   let creator;
   const post = new Post({
     title,
@@ -163,6 +161,13 @@ exports.deletePost = (req, res, next) => {
       }
       clearImage(post.imageUrl);
       return Post.findByIdAndDelete(postId);
+    })
+    .then(result => {
+      return User.findById(req.userId);
+    })
+    .then(user => {
+      user.posts.pull(postId);
+      return user.save();
     })
     .then(result => {
       res.status(200).json({message: 'Post was deleted'});
