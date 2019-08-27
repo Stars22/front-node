@@ -3,6 +3,7 @@ const Post = require('../models/post');
 const User = require('../models/user');
 const fs = require('fs');
 const path = require('path');
+const io = require('../socket');
 
 exports.getPosts = (req, res, next) => {
   const postsLimit = 2;
@@ -81,6 +82,7 @@ exports.createPost = (req, res, next) => {
       return user.save();
     })
     .then(result => {
+      io.getIo().emit('posts', { action: 'create', post: post })
       res.status(201).json({
         message: 'Post created successfully!',
         post: post,

@@ -58,5 +58,9 @@ app.use((err, req, res, next) => {
 });
 
 mongoose.connect(process.env.API_URL, { useNewUrlParser: true }, err => {
-  app.listen(8080);
+  const server = app.listen(8080);
+  const io = require('./socket').init(server);
+  io.on('connection', socket => {
+    console.log('Client connected');
+  })
 });
