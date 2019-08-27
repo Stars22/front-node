@@ -40,6 +40,8 @@ class Feed extends Component {
     socket.on('posts', data => {
       if(data.action === 'create') {
         this.addPost(data.post);
+      } else if(data.action === 'update') {
+        this.updatePost(data.post);
       }
     });
   }
@@ -56,6 +58,19 @@ class Feed extends Component {
         totalPosts: prevState.totalPosts + 1
       }
     })
+  }
+
+  updatePost = post => {
+    this.setState(prevState => {
+      const updatedPosts = [...prevState.posts];
+      const updatedPostIndex = updatedPosts.findIndex(p => p._id === post._id);
+      if(updatedPostIndex > -1) {
+        updatedPosts[updatedPostIndex] = post;
+      }
+      return {
+        posts: updatedPosts
+      }
+    });
   }
 
   loadPosts = direction => {
@@ -169,19 +184,11 @@ class Feed extends Component {
           creator: resData.post.creator,
           createdAt: resData.post.createdAt
         };
-        this.setState(prevState => {
-          let updatedPosts = [...prevState.posts];
-          if (prevState.editPost) {
-            const postIndex = prevState.posts.findIndex(
-              p => p._id === prevState.editPost._id
-            );
-            updatedPosts[postIndex] = post;
-          } 
+        this.setState(prevState => {     
           // else if (prevState.posts.length < 2) {
           //   updatedPosts = prevState.posts.concat(post);
           // }
           return {
-            posts: updatedPosts,
             isEditing: false,
             editPost: null,
             editLoading: false
