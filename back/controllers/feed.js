@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const Post = require('../models/post');
+const User = require('../models/user');
 const fs = require('fs');
 const path = require('path');
 
@@ -10,11 +11,12 @@ exports.getPosts = (req, res, next) => {
   Post.find().countDocuments()
     .then(count => {
       totalItems = count;
-      return Post.find()
+      return Post.find().populate({path: 'creator', select: 'name'})
         .skip((currentPage - 1) * postsLimit)
         .limit(postsLimit);
     })
     .then(posts => {
+      console.log(posts[0]);
       res.status(200).json({
         message: 'Fetched posts successfully',
         posts,
@@ -64,17 +66,27 @@ exports.createPost = (req, res, next) => {
   }
   const path = req.file.path.includes('\\') ? req.file.path.replace(/\\/g,"/") : req.file.path;
   console.log(path);
+  let creator;
   const post = new Post({
     title,
     content,
     imageUrl: path,
-    creator: { name: 'Ace'}
+    creator: req.userId
   });
   post.save()
+    .then(_ => {
+      return User.findById(req.userId);
+    })
+    .then(user => {
+      creator = user;
+      user.posts.push(post);
+      return user.save();
+    })
     .then(result => {
       res.status(201).json({
         message: 'Post created successfully!',
-        post: result
+        post: post,
+        creator: {_id: creator._id, name: creator.name}
       });
     })
     .catch(err => {
@@ -114,6 +126,11 @@ exports.updatePost = (req, res, next) => {
       if(imageUrl !== post.imageUrl) {
         clearImage(post.imageUrl);
       }
+      if(post.creator.toString() !== req.userId) {
+        const error = new Error('Not authorized!');
+        error.statusCode = 403;
+        throw error;
+      }
       post.title = title;
       post.content = content;
       post.imageUrl = imageUrl;
@@ -137,6 +154,11 @@ exports.deletePost = (req, res, next) => {
       if(!post) {
         const error = new Error('Could not find post');
         error.statusCode = 404;
+        throw error;
+      }
+      if(post.creator.toString() !== req.userId) {
+        const error = new Error('Not authorized!');
+        error.statusCode = 403;
         throw error;
       }
       clearImage(post.imageUrl);
