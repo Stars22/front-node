@@ -13,6 +13,7 @@ exports.getPosts = (req, res, next) => {
     .then(count => {
       totalItems = count;
       return Post.find().populate({path: 'creator', select: 'name'})
+        .sort({ createdAt: -1 })
         .skip((currentPage - 1) * postsLimit)
         .limit(postsLimit);
     })
