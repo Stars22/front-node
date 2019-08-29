@@ -9,11 +9,13 @@ module.exports = {
         if(!validator.isEmail(email)) {
             errors.push({message: 'Email is invalid'})
         }
-        if(validator.isEmpty(password) || !validator.isLength({min: 6})) {
+        if(validator.isEmpty(password) || !validator.isLength(password, {min: 6})) {
             errors.push({message: 'Password must be at least 6 characters'})
         }
         if(errors.length > 0) {
             const error = new Error('Invalid input');
+            error.data = errors;
+            error.statusCode = 422;
             throw error;
         }
         const existingUser = await User.findOne({ email });

@@ -51,7 +51,15 @@ app.use((req, res, next) => {
 app.use('/graphql', graphqlHttp({
   schema: graphqlSchema,
   rootValue: graphqlResolver,
-  graphiql: true
+  graphiql: true,
+  customFormatErrorFn(err) {
+    if(!err.originalError) {
+      return err;
+    }
+    const { data, statusCode = 500 } = err.originalError;
+    const message = err.message || 'An error occured';
+    return {data, statusCode, message};
+  }
 }))
 
 app.use((err, req, res, next) => {
