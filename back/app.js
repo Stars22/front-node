@@ -3,6 +3,9 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const path = require("path");
 const multer = require("multer");
+const graphqlHttp = require('express-graphql');
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
 require("dotenv").config();
 
 const storage = multer.diskStorage({
@@ -28,8 +31,6 @@ const fileFilter = (req, file, cb) => {
 };
 const upload = multer({ storage, fileFilter });
 
-const feedRoutes = require("./routes/feed");
-const authRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -47,8 +48,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/feed", feedRoutes);
-app.use('/auth', authRoutes);
+app.use('/graphql', graphqlHttp({
+  schema: graphqlSchema,
+  rootValue: graphqlResolver,
+  graphiql: true
+}))
+
 app.use((err, req, res, next) => {
   console.log(err);
   const status = err.statusCode || 500;
@@ -58,9 +63,5 @@ app.use((err, req, res, next) => {
 });
 
 mongoose.connect(process.env.API_URL, { useNewUrlParser: true }, err => {
-  const server = app.listen(8080);
-  const io = require('./socket').init(server);
-  io.on('connection', socket => {
-    console.log('Client connected');
-  })
+  app.listen(8080);
 });
