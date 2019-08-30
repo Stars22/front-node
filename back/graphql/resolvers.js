@@ -5,6 +5,7 @@ const validator = require('validator');
 module.exports = {
     //destucture nested objects to pull password, email and name from { {userInput: ...} }
     async createUser({ userInput: {password, email, name } }, req){
+        console.log('creating started')
         const errors = [];
         if(!validator.isEmail(email)) {
             errors.push({message: 'Email is invalid'})
