@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const Post = require('../models/post');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
@@ -45,5 +46,30 @@ module.exports = {
            email: user.email
         }, process.env.SECRET_KEY, {expiresIn: '30m'});
         return {token, userId: user._id.toString()};
+    },
+    async createPost( { postInput: {title, content, imageUrl} }, req) {
+        const errors = [];
+        if(validator.isEmpty(title) || !validator.isLength(title, {min: 5})) {
+            errors.push({message: 'Title is invalid'})
+        }
+        if(validator.isEmpty(content) || !validator.isLength(content, {min: 5})) {
+          errors.push({message: 'Content is invalid'})
+        }
+        if(errors.length > 0) {
+          const error = new Error('Invalid input');
+          error.data = errors;
+          error.statusCode = 422;
+          throw error;
+        }
+        const post = new Post( {
+          title, content, imageUrl
+        });
+        const createdPost = await post.save();
+        return {
+          ...createdPost._doc,
+          _id: createdPost._id.toString(),
+          createdAt: createdPost.createdAt.toISOString(),
+          updatedAt: createdPost.updatedAt.toISOString()
+        }
     }
 }

@@ -39,6 +39,7 @@ app.use(bodyParser.json());
 app.use("/images", express.static(path.join(__dirname, "images"))); // application/json
 app.use(upload.single('image'));
 app.use((req, res, next) => {
+  console.log(req.isAuth);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Methods",
