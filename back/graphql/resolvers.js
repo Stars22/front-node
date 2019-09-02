@@ -86,19 +86,25 @@ module.exports = {
           updatedAt: createdPost.updatedAt.toISOString()
         }
     },
-    async posts(_, req) {
+    async posts({page}, req) {
         if(!req.isAuth) {
             const error = new Error('Not authenticated');
             error.statusCode = 401;
             throw error;
         }
-        let posts = await Post.find().populate(creator);
+        if(!page) {
+            page = 1;
+        }
+        const perPage = 2;
+        let posts = await Post.find()
+            .skip((page - 1) * perPage).limit(perPage).sort({createdAt: -1})
+            .populate({path: 'creator', select: 'name'});
         posts = posts.map(post => { 
             return {
                 ...post._doc,
                 _id: post._id.toString(),
-                createdAt: createdAt.toISOString(),
-                updatedAt: updatedAt.toISOString()
+                createdAt: post.createdAt.toISOString(),
+                updatedAt: post.updatedAt.toISOString()
             }})
         const totalPosts = posts.length;
         return {posts, totalPosts};
